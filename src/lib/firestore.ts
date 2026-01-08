@@ -42,7 +42,7 @@ export const getDebtsCollection = (db: Firestore, userId: string) => {
   return collection(db, 'users', userId, 'debts');
 };
 
-export const addDebt = (db: Firestore, userId: string, debtData: Omit<Debt, 'id' | 'userId' | 'status'> & {dueDate: Date}) => {
+export const addDebt = (db: Firestore, userId: string, debtData: Omit<Debt, 'id' | 'userId' | 'status' | 'dueDate'> & {dueDate: Date}) => {
   const debtsCollection = getDebtsCollection(db, userId);
   const data = {
     ...debtData,
