@@ -5,12 +5,12 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 // Your web app's Firebase configuration
 // IMPORTANT: Replace with your own Firebase configuration
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  "projectId": "studio-8912600015-d3e57",
+  "appId": "1:611951108730:web:60c8744c875cf1fab0d1c3",
+  "apiKey": "AIzaSyDKS2BUzj2SDfLU0P75XiyWC4RTh5zlvI4",
+  "authDomain": "studio-8912600015-d3e57.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "611951108730"
 };
 
 // Initialize Firebase
