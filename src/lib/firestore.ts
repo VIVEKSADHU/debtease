@@ -9,8 +9,12 @@ import {
   deleteDoc,
   serverTimestamp,
   type Firestore,
+  writeBatch,
+  query,
+  where,
+  getDocs,
 } from 'firebase/firestore';
-import type { Customer, Debt } from './types';
+import type { Customer, Debt, MarketItem, RestockItem } from './types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -77,5 +81,69 @@ export const deleteDebt = (db: Firestore, userId: string, debtId: string) => {
       operation: 'delete',
     });
     errorEmitter.emit('permission-error', permissionError);
+  });
+};
+
+// Item List Functions (Market & Restock)
+type Item = MarketItem | RestockItem;
+type ItemType = 'market-items' | 'restock-items';
+
+export const getItemsCollection = (db: Firestore, userId: string, type: ItemType) => {
+  return collection(db, 'users', userId, type);
+};
+
+export const addItem = (db: Firestore, userId: string, type: ItemType, name: string) => {
+  const itemsCollection = getItemsCollection(db, userId, type);
+  const data = { name, checked: false, userId, createdAt: serverTimestamp() };
+  addDoc(itemsCollection, data).catch(async (serverError) => {
+    const permissionError = new FirestorePermissionError({
+      path: itemsCollection.path,
+      operation: 'create',
+      requestResourceData: data,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
+};
+
+export const toggleItem = (db: Firestore, userId: string, type: ItemType, itemId: string, checked: boolean) => {
+  const itemRef = doc(db, 'users', userId, type, itemId);
+  const data = { checked };
+  updateDoc(itemRef, data).catch(async (serverError) => {
+    const permissionError = new FirestorePermissionError({
+      path: itemRef.path,
+      operation: 'update',
+      requestResourceData: data,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
+};
+
+export const deleteItem = (db: Firestore, userId: string, type: ItemType, itemId: string) => {
+  const itemRef = doc(db, 'users', userId, type, itemId);
+  deleteDoc(itemRef).catch(async (serverError) => {
+    const permissionError = new FirestorePermissionError({
+      path: itemRef.path,
+      operation: 'delete',
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
+};
+
+export const deleteCheckedItems = (db: Firestore, userId: string, type: ItemType) => {
+  const itemsCollection = getItemsCollection(db, userId, type);
+  const q = query(itemsCollection, where('checked', '==', true));
+  
+  getDocs(q).then(snapshot => {
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    batch.commit().catch(async (serverError) => {
+         const permissionError = new FirestorePermissionError({
+            path: itemsCollection.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
   });
 };

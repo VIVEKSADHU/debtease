@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -7,54 +8,44 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { MarketItem, RestockItem } from "@/lib/types";
 
-type Item = {
-  id: string;
-  name: string;
-  checked: boolean;
-};
+type Item = MarketItem | RestockItem;
 
 type ItemListProps = {
   title: string;
-  initialItems: Item[];
+  items: Item[] | null;
+  loading: boolean;
+  onAddItem: (name: string) => void;
+  onToggleItem: (id: string, checked: boolean) => void;
+  onRemoveItem: (id: string) => void;
+  onRemoveChecked: () => void;
   inputPlaceholder: string;
   emptyStateText: string;
 };
 
-export function ItemList({ title, initialItems, inputPlaceholder, emptyStateText }: ItemListProps) {
-  const [items, setItems] = useState<Item[]>(initialItems);
+export function ItemList({ 
+  title, 
+  items, 
+  loading,
+  onAddItem,
+  onToggleItem,
+  onRemoveItem,
+  onRemoveChecked,
+  inputPlaceholder, 
+  emptyStateText 
+}: ItemListProps) {
   const [newItemName, setNewItemName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (newItemName.trim() === "") return;
-    const newItem: Item = {
-      id: Date.now().toString(),
-      name: newItemName.trim(),
-      checked: false,
-    };
-    setItems([newItem, ...items]);
+    onAddItem(newItemName.trim());
     setNewItemName("");
   };
 
-  const handleToggleItem = (id: string) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
-    );
-  };
-
-  const handleRemoveItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
-
-  const handleRemoveChecked = () => {
-    setItems(items.filter((item) => !item.checked));
-  };
-
-  const checkedCount = items.filter(item => item.checked).length;
+  const checkedCount = items?.filter(item => item.checked).length || 0;
 
   return (
     <Card>
@@ -67,15 +58,18 @@ export function ItemList({ title, initialItems, inputPlaceholder, emptyStateText
             onChange={(e) => setNewItemName(e.target.value)}
             placeholder={inputPlaceholder}
             className="flex-1"
+            disabled={loading}
           />
-          <Button type="submit" size="icon">
+          <Button type="submit" size="icon" disabled={loading}>
             <Plus className="h-4 w-4" />
             <span className="sr-only">Add Item</span>
           </Button>
         </form>
       </CardHeader>
       <CardContent>
-        {items.length > 0 ? (
+        {loading ? (
+          <div className="text-center p-8">Loading items...</div>
+        ) : items && items.length > 0 ? (
           <div className="space-y-2">
             {items.map((item) => (
               <div
@@ -88,7 +82,7 @@ export function ItemList({ title, initialItems, inputPlaceholder, emptyStateText
                 <Checkbox
                   id={`item-${item.id}`}
                   checked={item.checked}
-                  onCheckedChange={() => handleToggleItem(item.id)}
+                  onCheckedChange={() => onToggleItem(item.id, !item.checked)}
                 />
                 <label
                   htmlFor={`item-${item.id}`}
@@ -103,7 +97,7 @@ export function ItemList({ title, initialItems, inputPlaceholder, emptyStateText
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive"
-                  onClick={() => handleRemoveItem(item.id)}
+                  onClick={() => onRemoveItem(item.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -118,7 +112,7 @@ export function ItemList({ title, initialItems, inputPlaceholder, emptyStateText
       </CardContent>
       {checkedCount > 0 && (
         <CardFooter className="border-t pt-4">
-          <Button variant="outline" size="sm" onClick={handleRemoveChecked}>
+          <Button variant="outline" size="sm" onClick={onRemoveChecked}>
             <Trash2 className="mr-2 h-4 w-4" />
             Remove {checkedCount} checked item(s)
           </Button>

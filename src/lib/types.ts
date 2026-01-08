@@ -15,3 +15,19 @@ export type Debt = {
   notes?: string;
   userId: string;
 };
+
+export type MarketItem = {
+  id: string;
+  name: string;
+  checked: boolean;
+  userId: string;
+  createdAt: any;
+};
+
+export type RestockItem = {
+  id: string;
+  name: string;
+  checked: boolean;
+  userId: string;
+  createdAt: any;
+};

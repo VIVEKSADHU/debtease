@@ -54,6 +54,56 @@
                 }
             },
             "required": ["creditorName", "customerId", "amount", "dueDate", "status", "userId"]
+        },
+        "MarketItem": {
+            "title": "Market Item",
+            "description": "Represents an item in the market checklist.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the item."
+                },
+                "checked": {
+                    "type": "boolean",
+                    "description": "Whether the item has been purchased."
+                },
+                "userId": {
+                    "type": "string",
+                    "description": "The ID of the user this item belongs to."
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The timestamp when the item was created."
+                }
+            },
+            "required": ["name", "checked", "userId", "createdAt"]
+        },
+        "RestockItem": {
+            "title": "Restock Item",
+            "description": "Represents an item in the home restock list.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the item."
+                },
+                "checked": {
+                    "type": "boolean",
+                    "description": "Whether the item has been restocked."
+                },
+                "userId": {
+                    "type": "string",
+                    "description": "The ID of the user this item belongs to."
+                },
+                 "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The timestamp when the item was created."
+                }
+            },
+            "required": ["name", "checked", "userId", "createdAt"]
         }
     },
     "auth": {
@@ -71,6 +121,18 @@
                 "$ref": "#/backend/entities/Debt"
             },
             "description": "Stores individual debt records for a user."
+        },
+        "/users/{userId}/market-items/{itemId}": {
+            "schema": {
+                "$ref": "#/backend/entities/MarketItem"
+            },
+            "description": "Stores market checklist items for a user."
+        },
+        "/users/{userId}/restock-items/{itemId}": {
+            "schema": {
+                "$ref": "#/backend/entities/RestockItem"
+            },
+            "description": "Stores home restock list items for a user."
         }
     }
 }
