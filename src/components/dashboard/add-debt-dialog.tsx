@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -39,7 +40,7 @@ type FormValues = z.infer<typeof formSchema>;
 type AddDebtDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddDebt: (debt: Omit<FormValues, 'id' | 'status'>) => void;
+  onAddDebt: (debt: FormValues) => void;
 };
 
 export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogProps) {
@@ -91,7 +92,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount (₹)</FormLabel>
+                  <FormLabel>Amount (Rs.)</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.01" {...field} />
                   </FormControl>
