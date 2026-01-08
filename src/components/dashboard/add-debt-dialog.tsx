@@ -22,6 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
@@ -33,6 +34,7 @@ const formSchema = z.object({
   creditorName: z.string().min(1, { message: "Creditor name is required." }),
   amount: z.coerce.number().positive({ message: "Amount must be positive." }),
   dueDate: z.date({ required_error: "A due date is required." }),
+  notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -50,6 +52,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
     defaultValues: {
       creditorName: "",
       amount: 0,
+      notes: "",
     },
   });
 
@@ -137,6 +140,23 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
                       />
                     </PopoverContent>
                   </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g., List of items taken..."
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

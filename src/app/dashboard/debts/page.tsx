@@ -29,13 +29,14 @@ type Debt = {
   amount: number;
   dueDate: string; // ISO string format
   status: "Paid" | "Unpaid";
+  notes?: string;
 };
 
 const initialDebts: Debt[] = [
-  { id: "1", creditorName: "John Doe", amount: 150.00, dueDate: "2024-08-15T00:00:00.000Z", status: "Unpaid" },
+  { id: "1", creditorName: "John Doe", amount: 150.00, dueDate: "2024-08-15T00:00:00.000Z", status: "Unpaid", notes: "Borrowed for groceries." },
   { id: "2", creditorName: "Jane Smith", amount: 300.50, dueDate: "2024-07-20T00:00:00.000Z", status: "Unpaid" },
-  { id: "3", creditorName: "Sam Wilson", amount: 50.25, dueDate: "2024-06-30T00:00:00.000Z", status: "Paid" },
-  { id: "4", creditorName: "Alice Brown", amount: 420.00, dueDate: "2024-08-01T00:00:00.000Z", status: "Unpaid" },
+  { id: "3", creditorName: "Sam Wilson", amount: 50.25, dueDate: "2024-06-30T00:00:00.000Z", status: "Paid", notes: "Repaid loan for coffee." },
+  { id: "4", creditorName: "Alice Brown", amount: 420.00, dueDate: "2024-08-01T00:00:00.000Z", status: "Unpaid", notes: "Emergency fund." },
 ];
 
 function DebtStatusBadge({ dueDate, status }: { dueDate: string; status: Debt['status'] }) {
@@ -79,7 +80,7 @@ export default function DebtsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {debts.map((debt) => (
-          <Card key={debt.id}>
+          <Card key={debt.id} className="flex flex-col">
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                <div>
                  <CardTitle className="text-lg font-medium">{debt.creditorName}</CardTitle>
@@ -87,8 +88,9 @@ export default function DebtsPage() {
                </div>
                <DebtStatusBadge dueDate={debt.dueDate} status={debt.status} />
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-grow">
               <div className="text-3xl font-bold">Rs. {debt.amount.toFixed(2)}</div>
+              {debt.notes && <p className="text-sm text-muted-foreground mt-2">{debt.notes}</p>}
             </CardContent>
             <CardFooter className="flex justify-end">
                 <DropdownMenu>
