@@ -34,6 +34,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle } from "lucide-react";
 import { AddCustomerDialog } from "./add-customer-dialog";
+import type { Customer } from "@/lib/types";
+import { useUser, useFirestore } from "@/firebase";
+import { addDebt as addDebtToDb, addCustomer as addCustomerToDb } from "@/lib/firestore";
 
 const formSchema = z.object({
   customerId: z.string().min(1, { message: "Customer is required." }),
@@ -42,23 +45,17 @@ const formSchema = z.object({
   notes: z.string().optional(),
 });
 
-type FormValues = Omit<z.infer<typeof formSchema>, 'customerId'> & { creditorName: string; dueDate: string };
-
-type Customer = {
-    id: string;
-    name: string;
-};
 
 type AddDebtDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddDebt: (debt: FormValues) => void;
   customers: Customer[];
-  onAddCustomer: (name: string) => Customer;
 };
 
-export function AddDebtDialog({ open, onOpenChange, onAddDebt, customers, onAddCustomer }: AddDebtDialogProps) {
+export function AddDebtDialog({ open, onOpenChange, customers }: AddDebtDialogProps) {
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [isAddingCustomer, setIsAddingCustomer] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>();
   
@@ -72,27 +69,33 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt, customers, onAddC
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const customer = customers.find(c => c.id === values.customerId);
-    if (!customer) return;
+    if (!customer || !firestore || !user) return;
 
-    onAddDebt({
-        ...values,
-        creditorName: customer.name,
-    });
-    toast({
-      title: "Debt Added!",
-      description: `${customer.name} has been added to your list.`,
-    });
-    form.reset();
-    onOpenChange(false);
+    try {
+        await addDebtToDb(firestore, user.uid, {
+            ...values,
+            creditorName: customer.name,
+            dueDate: new Date(values.dueDate),
+        });
+        toast({
+            title: "Debt Added!",
+            description: `A new debt for ${customer.name} has been added.`,
+        });
+        form.reset();
+        onOpenChange(false);
+    } catch(e) {
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "There was a problem adding the debt.",
+        });
+    }
   }
 
-  const handleAddNewCustomer = (name: string) => {
-    const newCustomer = onAddCustomer(name);
-    form.setValue('customerId', newCustomer.id);
-    setSelectedCustomerId(newCustomer.id);
-    setIsAddingCustomer(false)
+  const handleAddNewCustomer = () => {
+    setIsAddingCustomer(true);
   }
 
   return (
@@ -102,7 +105,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt, customers, onAddC
         <DialogHeader>
           <DialogTitle>Add New Debt</DialogTitle>
           <DialogDescription>
-            Enter the details of the debt below. Click save when you&apos;re done.
+            Enter the details of the debt below. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -114,7 +117,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt, customers, onAddC
                 <FormItem>
                   <FormLabel>Customer</FormLabel>
                   <div className="flex items-center gap-2">
-                  <Select onValueChange={field.onChange} defaultValue={field.value} value={selectedCustomerId}>
+                  <Select onValueChange={(value) => { field.onChange(value); setSelectedCustomerId(value); }} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a customer" />
@@ -126,7 +129,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt, customers, onAddC
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="outline" size="icon" onClick={() => setIsAddingCustomer(true)}>
+                  <Button type="button" variant="outline" size="icon" onClick={handleAddNewCustomer}>
                       <PlusCircle className="h-4 w-4"/>
                   </Button>
                   </div>
@@ -154,7 +157,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt, customers, onAddC
                 <FormItem>
                   <FormLabel>Due Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} value={field.value.toString().split('T')[0]}/>
+                    <Input type="date" {...field} value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -185,7 +188,16 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt, customers, onAddC
         </Form>
       </DialogContent>
     </Dialog>
-    <AddCustomerDialog open={isAddingCustomer} onOpenChange={setIsAddingCustomer} onAddCustomer={handleAddNewCustomer} />
+    <AddCustomerDialog 
+        open={isAddingCustomer} 
+        onOpenChange={setIsAddingCustomer} 
+        onCustomerAdded={(newCustomerId) => {
+            if(customers.find(c => c.id === newCustomerId)) {
+                setSelectedCustomerId(newCustomerId);
+                form.setValue('customerId', newCustomerId);
+            }
+        }}
+    />
     </>
   );
 }

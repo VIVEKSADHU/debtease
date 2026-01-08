@@ -1,0 +1,76 @@
+
+{
+    "entities": {
+        "Customer": {
+            "title": "Customer",
+            "description": "Represents a customer who can owe money.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the customer."
+                },
+                "userId": {
+                    "type": "string",
+                    "description": "The ID of the user who this customer belongs to."
+                }
+            },
+            "required": ["name", "userId"]
+        },
+        "Debt": {
+            "title": "Debt",
+            "description": "Represents a single debt entry.",
+            "type": "object",
+            "properties": {
+                "creditorName": {
+                    "type": "string",
+                    "description": "The name of the person who owes money."
+                },
+                "customerId": {
+                    "type": "string",
+                    "description": "The ID of the customer who owes the debt."
+                },
+                "amount": {
+                    "type": "number",
+                    "description": "The amount of money owed."
+                },
+                "dueDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date the debt is due."
+                },
+                "status": {
+                    "type": "string",
+                    "enum": ["Paid", "Unpaid"],
+                    "description": "The status of the debt."
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "Optional notes about the debt."
+                },
+                "userId": {
+                    "type": "string",
+                    "description": "The ID of the user who this debt belongs to."
+                }
+            },
+            "required": ["creditorName", "customerId", "amount", "dueDate", "status", "userId"]
+        }
+    },
+    "auth": {
+        "providers": ["email"]
+    },
+    "firestore": {
+        "/users/{userId}/customers/{customerId}": {
+            "schema": {
+                "$ref": "#/backend/entities/Customer"
+            },
+            "description": "Stores customer profiles."
+        },
+        "/users/{userId}/debts/{debtId}": {
+            "schema": {
+                "$ref": "#/backend/entities/Debt"
+            },
+            "description": "Stores individual debt records for a user."
+        }
+    }
+}

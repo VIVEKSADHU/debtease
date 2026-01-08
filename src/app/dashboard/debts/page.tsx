@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -21,29 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { AddDebtDialog } from "@/components/dashboard/add-debt-dialog";
 import { format, differenceInDays } from 'date-fns';
-
-type Debt = {
-  id: string;
-  creditorName: string;
-  amount: number;
-  dueDate: string; // ISO string format
-  status: "Paid" | "Unpaid";
-  notes?: string;
-};
-
-const initialDebts: Debt[] = [
-  { id: "1", creditorName: "John Doe", amount: 150.00, dueDate: new Date("2024-08-15").toISOString(), status: "Unpaid", notes: "Borrowed for groceries." },
-  { id: "2", creditorName: "Jane Smith", amount: 300.50, dueDate: new Date("2024-07-20").toISOString(), status: "Unpaid" },
-  { id: "3", creditorName: "Sam Wilson", amount: 50.25, dueDate: new Date("2024-06-30").toISOString(), status: "Paid", notes: "Repaid loan for coffee." },
-  { id: "4", creditorName: "Alice Brown", amount: 420.00, dueDate: new Date("2024-08-01").toISOString(), status: "Unpaid", notes: "Emergency fund." },
-];
-
-const initialCustomers = [
-    { id: "1", name: "John Doe" },
-    { id: "2", name: "Jane Smith" },
-    { id: "3", name: "Sam Wilson" },
-    { id: "4", name: "Alice Brown" },
-];
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { getCustomersCollection, getDebtsCollection, updateDebtStatus, deleteDebt as deleteDebtFromDb } from "@/lib/firestore";
+import type { Customer, Debt } from "@/lib/types";
 
 function DebtStatusBadge({ dueDate, status }: { dueDate: string; status: Debt['status'] }) {
   if (status === 'Paid') {
@@ -60,81 +40,93 @@ function DebtStatusBadge({ dueDate, status }: { dueDate: string; status: Debt['s
 }
 
 export default function DebtsPage() {
-  const [debts, setDebts] = useState<Debt[]>(initialDebts);
-  const [customers, setCustomers] = useState(initialCustomers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const addDebt = (newDebt: Omit<Debt, 'id' | 'status'>) => {
-    setDebts(prev => [{ ...newDebt, id: Date.now().toString(), status: 'Unpaid' }, ...prev]);
-  };
+  const debtsCollection = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return getDebtsCollection(firestore, user.uid);
+  }, [firestore, user]);
 
-  const addCustomer = (name: string) => {
-    const newCustomer = { id: Date.now().toString(), name };
-    setCustomers(prev => [...prev, newCustomer]);
-    return newCustomer;
-  }
+  const { data: debts, loading: debtsLoading } = useCollection<Debt>(debtsCollection);
+
+  const customersCollection = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return getCustomersCollection(firestore, user.uid);
+  }, [firestore, user]);
+
+  const { data: customers, loading: customersLoading } = useCollection<Customer>(customersCollection);
 
   const markAsPaid = (id: string) => {
-    setDebts(debts.map(d => d.id === id ? { ...d, status: 'Paid' } : d));
+    if (!firestore || !user) return;
+    updateDebtStatus(firestore, user.uid, id, 'Paid');
   };
   
   const deleteDebt = (id: string) => {
-    setDebts(debts.filter(d => d.id !== id));
+    if (!firestore || !user) return;
+    deleteDebtFromDb(firestore, user.uid, id);
   };
+  
+  const loading = debtsLoading || customersLoading;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-end">
-        <Button onClick={() => setIsDialogOpen(true)}>
+        <Button onClick={() => setIsDialogOpen(true)} disabled={!firestore || !user}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add New Debt
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {debts.map((debt) => (
-          <Card key={debt.id} className="flex flex-col">
-            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-               <div>
-                 <CardTitle className="text-lg font-medium">{debt.creditorName}</CardTitle>
-                 <CardDescription>Due: {format(new Date(debt.dueDate), 'PPP')}</CardDescription>
-               </div>
-               <DebtStatusBadge dueDate={debt.dueDate} status={debt.status} />
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <div className="text-3xl font-bold">Rs. {debt.amount.toFixed(2)}</div>
-              {debt.notes && <p className="text-sm text-muted-foreground mt-2">{debt.notes}</p>}
-            </CardContent>
-            <CardFooter className="flex justify-end">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                      {debt.status === 'Unpaid' && <DropdownMenuItem onClick={() => markAsPaid(debt.id)}>Mark as Paid</DropdownMenuItem>}
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => deleteDebt(debt.id)} className="text-destructive">Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-      {debts.length === 0 && (
-         <div className="text-center p-8 border-2 border-dashed rounded-lg">
-            <p className="text-lg font-semibold">No debts found</p>
-            <p className="text-sm text-muted-foreground">Add a new debt to get started.</p>
-        </div>
+       {loading ? (
+        <div className="text-center p-8">Loading debts...</div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {debts && debts.map((debt) => (
+              <Card key={debt.id} className="flex flex-col">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                  <div>
+                    <CardTitle className="text-lg font-medium">{debt.creditorName}</CardTitle>
+                    <CardDescription>Due: {format(new Date(debt.dueDate), 'PPP')}</CardDescription>
+                  </div>
+                  <DebtStatusBadge dueDate={debt.dueDate} status={debt.status} />
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <div className="text-3xl font-bold">Rs. {debt.amount.toFixed(2)}</div>
+                  {debt.notes && <p className="text-sm text-muted-foreground mt-2">{debt.notes}</p>}
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                          {debt.status === 'Unpaid' && <DropdownMenuItem onClick={() => markAsPaid(debt.id)}>Mark as Paid</DropdownMenuItem>}
+                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => deleteDebt(debt.id)} className="text-destructive">Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+          {debts && debts.length === 0 && (
+            <div className="text-center p-8 border-2 border-dashed rounded-lg">
+                <p className="text-lg font-semibold">No debts found</p>
+                <p className="text-sm text-muted-foreground">Add a new debt to get started.</p>
+            </div>
+          )}
+        </>
       )}
       <AddDebtDialog 
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen} 
-        onAddDebt={addDebt}
-        customers={customers}
-        onAddCustomer={addCustomer}
+        customers={customers || []}
       />
     </div>
   );

@@ -6,12 +6,12 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Wallet, ShoppingCart, Home as HomeIcon } from "lucide-react";
-import { useAuth } from '@/hooks/use-auth';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 function RedirectIfAuthenticated() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
@@ -24,7 +24,7 @@ function RedirectIfAuthenticated() {
 }
 
 export default function LandingPage() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useUser();
 
   const heroImage = PlaceHolderImages.find(p => p.id === "1");
 

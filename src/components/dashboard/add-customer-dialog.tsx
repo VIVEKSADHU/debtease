@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestore, useUser } from "@/firebase";
+import { addCustomer as addCustomerToDb } from "@/lib/firestore";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Customer name is required." }),
@@ -33,11 +35,14 @@ type FormValues = z.infer<typeof formSchema>;
 type AddCustomerDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddCustomer: (name: string) => void;
+  onCustomerAdded?: (customerId: string) => void;
 };
 
-export function AddCustomerDialog({ open, onOpenChange, onAddCustomer }: AddCustomerDialogProps) {
+export function AddCustomerDialog({ open, onOpenChange, onCustomerAdded }: AddCustomerDialogProps) {
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,14 +50,22 @@ export function AddCustomerDialog({ open, onOpenChange, onAddCustomer }: AddCust
     },
   });
 
-  function onSubmit(values: FormValues) {
-    onAddCustomer(values.name);
-    toast({
-      title: "Customer Added!",
-      description: `${values.name} has been added to your customer list.`,
-    });
-    form.reset();
-    onOpenChange(false);
+  async function onSubmit(values: FormValues) {
+    if (!firestore || !user) {
+        toast({ variant: "destructive", title: "Error", description: "Not authenticated." });
+        return;
+    }
+    try {
+        await addCustomerToDb(firestore, user.uid, { name: values.name });
+        toast({
+            title: "Customer Added!",
+            description: `${values.name} has been added to your customer list.`,
+        });
+        form.reset();
+        onOpenChange(false);
+    } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Could not add customer." });
+    }
   }
 
   return (
