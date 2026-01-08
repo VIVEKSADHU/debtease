@@ -72,11 +72,11 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
         <DialogHeader>
           <DialogTitle>Add New Debt</DialogTitle>
           <DialogDescription>
-            Enter the details of the debt below. Click save when you're done.
+            Enter the details of the debt below. Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
             <FormField
               control={form.control}
               name="creditorName"
