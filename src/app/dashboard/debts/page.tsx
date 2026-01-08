@@ -33,17 +33,17 @@ type Debt = {
 };
 
 const initialDebts: Debt[] = [
-  { id: "1", creditorName: "John Doe", amount: 150.00, dueDate: "2024-08-15T00:00:00.000Z", status: "Unpaid", notes: "Borrowed for groceries." },
-  { id: "2", creditorName: "Jane Smith", amount: 300.50, dueDate: "2024-07-20T00:00:00.000Z", status: "Unpaid" },
-  { id: "3", creditorName: "Sam Wilson", amount: 50.25, dueDate: "2024-06-30T00:00:00.000Z", status: "Paid", notes: "Repaid loan for coffee." },
-  { id: "4", creditorName: "Alice Brown", amount: 420.00, dueDate: "2024-08-01T00:00:00.000Z", status: "Unpaid", notes: "Emergency fund." },
+  { id: "1", creditorName: "John Doe", amount: 150.00, dueDate: "2024-08-15", status: "Unpaid", notes: "Borrowed for groceries." },
+  { id: "2", creditorName: "Jane Smith", amount: 300.50, dueDate: "2024-07-20", status: "Unpaid" },
+  { id: "3", creditorName: "Sam Wilson", amount: 50.25, dueDate: "2024-06-30", status: "Paid", notes: "Repaid loan for coffee." },
+  { id: "4", creditorName: "Alice Brown", amount: 420.00, dueDate: "2024-08-01", status: "Unpaid", notes: "Emergency fund." },
 ];
 
 function DebtStatusBadge({ dueDate, status }: { dueDate: string; status: Debt['status'] }) {
   if (status === 'Paid') {
     return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Paid</Badge>;
   }
-  const daysUntilDue = differenceInDays(parseISO(dueDate), new Date());
+  const daysUntilDue = differenceInDays(new Date(dueDate), new Date());
   if (daysUntilDue < 0) {
     return <Badge variant="destructive">Overdue</Badge>;
   }
@@ -84,7 +84,7 @@ export default function DebtsPage() {
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                <div>
                  <CardTitle className="text-lg font-medium">{debt.creditorName}</CardTitle>
-                 <CardDescription>Due: {format(parseISO(debt.dueDate), 'PPP')}</CardDescription>
+                 <CardDescription>Due: {format(new Date(debt.dueDate), 'PPP')}</CardDescription>
                </div>
                <DebtStatusBadge dueDate={debt.dueDate} status={debt.status} />
             </CardHeader>

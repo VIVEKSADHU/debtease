@@ -23,17 +23,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   creditorName: z.string().min(1, { message: "Creditor name is required." }),
   amount: z.coerce.number().positive({ message: "Amount must be positive." }),
-  dueDate: z.date({ required_error: "A due date is required." }),
+  dueDate: z.string().min(1, { message: "A due date is required." }),
   notes: z.string().optional(),
 });
 
@@ -42,7 +37,7 @@ type FormValues = z.infer<typeof formSchema>;
 type AddDebtDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddDebt: (debt: Omit<FormValues, 'dueDate'> & { dueDate: string }) => void;
+  onAddDebt: (debt: FormValues) => void;
 };
 
 export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogProps) {
@@ -52,15 +47,13 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
     defaultValues: {
       creditorName: "",
       amount: 0,
+      dueDate: "",
       notes: "",
     },
   });
 
   function onSubmit(values: FormValues) {
-    onAddDebt({
-      ...values,
-      dueDate: values.dueDate.toISOString(),
-    });
+    onAddDebt(values);
     toast({
       title: "Debt Added!",
       description: `${values.creditorName} has been added to your list.`,
@@ -110,39 +103,11 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
               control={form.control}
               name="dueDate"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem>
                   <FormLabel>Due Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date(new Date().setHours(0, 0, 0, 0))
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
