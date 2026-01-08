@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect } from 'react';
@@ -11,23 +12,30 @@ import {
   Home,
   Bell,
   Users,
+  PanelLeft,
+  Package2,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { UserNav } from '@/components/dashboard/user-nav';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
-function NavLink({ href, children, icon }: { href: string; children: React.ReactNode; icon: React.ReactNode }) {
+function NavLink({ href, children, icon, className }: { href: string; children: React.ReactNode; icon: React.ReactNode, className?: string }) {
   const pathname = usePathname();
   const isActive = pathname === href;
 
   return (
-    <Link href={href}>
+    <Link href={href} className={cn("text-muted-foreground hover:text-foreground", isActive && "text-foreground", className)}>
       <Button
         variant={isActive ? 'secondary' : 'ghost'}
-        className="w-full justify-start"
+        className="w-full justify-start gap-2"
       >
-        <span className="mr-2">{icon}</span>
+        {icon}
         {children}
       </Button>
     </Link>
@@ -101,6 +109,31 @@ export default function DashboardLayout({
       </aside>
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-64">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="icon" variant="outline" className="sm:hidden">
+                <PanelLeft className="h-5 w-5" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="sm:max-w-xs">
+              <nav className="grid gap-6 text-lg font-medium">
+                <Link
+                  href="#"
+                  className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+                >
+                  <Package2 className="h-5 w-5 transition-all group-hover:scale-110" />
+                  <span className="sr-only">DebtEase</span>
+                </Link>
+                <NavLink href="/dashboard" icon={<LayoutGrid className="h-5 w-5" />}>Dashboard</NavLink>
+                <NavLink href="/dashboard/debts" icon={<Wallet className="h-5 w-5" />}>Debts</NavLink>
+                <NavLink href="/dashboard/customers" icon={<Users className="h-5 w-5" />}>Customers</NavLink>
+                <NavLink href="/dashboard/market-checklist" icon={<ShoppingCart className="h-5 w-5" />}>Market List</NavLink>
+                <NavLink href="/dashboard/restock" icon={<Home className="h-5 w-5" />}>Restock List</NavLink>
+              </nav>
+            </SheetContent>
+          </Sheet>
+
           <h1 className="text-2xl font-semibold font-headline">{getPageTitle()}</h1>
           <div className="relative ml-auto flex-1 md:grow-0">
              {/* Future search bar */}
