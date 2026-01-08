@@ -86,10 +86,10 @@ export default function DashboardLayout({
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary transition-all group-hover:scale-110"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
             <span>DebtEase</span>
           </Link>
-          <NavLink href="/dashboard" icon={<LayoutGrid className="h-4 w-4" />}Dashboard</NavLink>
-          <NavLink href="/dashboard/debts" icon={<Wallet className="h-4 w-4" />}Debts</NavLink>
-          <NavLink href="/dashboard/market-checklist" icon={<ShoppingCart className="h-4 w-4" />}Market List</NavLink>
-          <NavLink href="/dashboard/restock" icon={<Home className="h-4 w-4" />}Restock List</NavLink>
+          <NavLink href="/dashboard" icon={<LayoutGrid className="h-4 w-4" />}>Dashboard</NavLink>
+          <NavLink href="/dashboard/debts" icon={<Wallet className="h-4 w-4" />}>Debts</NavLink>
+          <NavLink href="/dashboard/market-checklist" icon={<ShoppingCart className="h-4 w-4" />}>Market List</NavLink>
+          <NavLink href="/dashboard/restock" icon={<Home className="h-4 w-4" />}>Restock List</NavLink>
         </nav>
         <div className="mt-auto p-4">
           <UserNav />
