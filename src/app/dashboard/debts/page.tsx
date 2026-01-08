@@ -87,7 +87,7 @@ export default function DebtsPage() {
                <DebtStatusBadge dueDate={debt.dueDate} status={debt.status} />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">${debt.amount.toFixed(2)}</div>
+              <div className="text-3xl font-bold">₹{debt.amount.toFixed(2)}</div>
             </CardContent>
             <CardFooter className="flex justify-end">
                 <DropdownMenu>
