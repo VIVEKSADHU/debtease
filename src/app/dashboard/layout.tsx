@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   Home,
   Bell,
+  Users,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -66,6 +67,8 @@ export default function DashboardLayout({
         return 'Dashboard';
       case '/dashboard/debts':
         return 'Debt Tracker';
+      case '/dashboard/customers':
+        return 'Customers';
       case '/dashboard/market-checklist':
         return 'Market Checklist';
       case '/dashboard/restock':
@@ -88,6 +91,7 @@ export default function DashboardLayout({
           </Link>
           <NavLink href="/dashboard" icon={<LayoutGrid className="h-4 w-4" />}>Dashboard</NavLink>
           <NavLink href="/dashboard/debts" icon={<Wallet className="h-4 w-4" />}>Debts</NavLink>
+          <NavLink href="/dashboard/customers" icon={<Users className="h-4 w-4" />}>Customers</NavLink>
           <NavLink href="/dashboard/market-checklist" icon={<ShoppingCart className="h-4 w-4" />}>Market List</NavLink>
           <NavLink href="/dashboard/restock" icon={<Home className="h-4 w-4" />}>Restock List</NavLink>
         </nav>

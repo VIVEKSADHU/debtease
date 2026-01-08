@@ -20,8 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { AddDebtDialog } from "@/components/dashboard/add-debt-dialog";
-import { format, differenceInDays, parseISO } from 'date-fns';
-
+import { format, differenceInDays } from 'date-fns';
 
 type Debt = {
   id: string;
@@ -33,10 +32,17 @@ type Debt = {
 };
 
 const initialDebts: Debt[] = [
-  { id: "1", creditorName: "John Doe", amount: 150.00, dueDate: "2024-08-15", status: "Unpaid", notes: "Borrowed for groceries." },
-  { id: "2", creditorName: "Jane Smith", amount: 300.50, dueDate: "2024-07-20", status: "Unpaid" },
-  { id: "3", creditorName: "Sam Wilson", amount: 50.25, dueDate: "2024-06-30", status: "Paid", notes: "Repaid loan for coffee." },
-  { id: "4", creditorName: "Alice Brown", amount: 420.00, dueDate: "2024-08-01", status: "Unpaid", notes: "Emergency fund." },
+  { id: "1", creditorName: "John Doe", amount: 150.00, dueDate: new Date("2024-08-15").toISOString(), status: "Unpaid", notes: "Borrowed for groceries." },
+  { id: "2", creditorName: "Jane Smith", amount: 300.50, dueDate: new Date("2024-07-20").toISOString(), status: "Unpaid" },
+  { id: "3", creditorName: "Sam Wilson", amount: 50.25, dueDate: new Date("2024-06-30").toISOString(), status: "Paid", notes: "Repaid loan for coffee." },
+  { id: "4", creditorName: "Alice Brown", amount: 420.00, dueDate: new Date("2024-08-01").toISOString(), status: "Unpaid", notes: "Emergency fund." },
+];
+
+const initialCustomers = [
+    { id: "1", name: "John Doe" },
+    { id: "2", name: "Jane Smith" },
+    { id: "3", name: "Sam Wilson" },
+    { id: "4", name: "Alice Brown" },
 ];
 
 function DebtStatusBadge({ dueDate, status }: { dueDate: string; status: Debt['status'] }) {
@@ -55,11 +61,18 @@ function DebtStatusBadge({ dueDate, status }: { dueDate: string; status: Debt['s
 
 export default function DebtsPage() {
   const [debts, setDebts] = useState<Debt[]>(initialDebts);
+  const [customers, setCustomers] = useState(initialCustomers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const addDebt = (newDebt: Omit<Debt, 'id' | 'status'>) => {
     setDebts(prev => [{ ...newDebt, id: Date.now().toString(), status: 'Unpaid' }, ...prev]);
   };
+
+  const addCustomer = (name: string) => {
+    const newCustomer = { id: Date.now().toString(), name };
+    setCustomers(prev => [...prev, newCustomer]);
+    return newCustomer;
+  }
 
   const markAsPaid = (id: string) => {
     setDebts(debts.map(d => d.id === id ? { ...d, status: 'Paid' } : d));
@@ -116,7 +129,13 @@ export default function DebtsPage() {
             <p className="text-sm text-muted-foreground">Add a new debt to get started.</p>
         </div>
       )}
-      <AddDebtDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onAddDebt={addDebt} />
+      <AddDebtDialog 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
+        onAddDebt={addDebt}
+        customers={customers}
+        onAddCustomer={addCustomer}
+      />
     </div>
   );
 }

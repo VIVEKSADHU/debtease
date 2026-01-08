@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,48 +22,81 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { PlusCircle } from "lucide-react";
+import { AddCustomerDialog } from "./add-customer-dialog";
 
 const formSchema = z.object({
-  creditorName: z.string().min(1, { message: "Creditor name is required." }),
+  customerId: z.string().min(1, { message: "Customer is required." }),
   amount: z.coerce.number().positive({ message: "Amount must be positive." }),
   dueDate: z.string().min(1, { message: "A due date is required." }),
   notes: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = Omit<z.infer<typeof formSchema>, 'customerId'> & { creditorName: string; dueDate: string };
+
+type Customer = {
+    id: string;
+    name: string;
+};
 
 type AddDebtDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddDebt: (debt: FormValues) => void;
+  customers: Customer[];
+  onAddCustomer: (name: string) => Customer;
 };
 
-export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogProps) {
+export function AddDebtDialog({ open, onOpenChange, onAddDebt, customers, onAddCustomer }: AddDebtDialogProps) {
   const { toast } = useToast();
-  const form = useForm<FormValues>({
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>();
+  
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      creditorName: "",
+      customerId: "",
       amount: 0,
       dueDate: "",
       notes: "",
     },
   });
 
-  function onSubmit(values: FormValues) {
-    onAddDebt(values);
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    const customer = customers.find(c => c.id === values.customerId);
+    if (!customer) return;
+
+    onAddDebt({
+        ...values,
+        creditorName: customer.name,
+    });
     toast({
       title: "Debt Added!",
-      description: `${values.creditorName} has been added to your list.`,
+      description: `${customer.name} has been added to your list.`,
     });
     form.reset();
     onOpenChange(false);
   }
 
+  const handleAddNewCustomer = (name: string) => {
+    const newCustomer = onAddCustomer(name);
+    form.setValue('customerId', newCustomer.id);
+    setSelectedCustomerId(newCustomer.id);
+    setIsAddingCustomer(false)
+  }
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -75,13 +109,27 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
             <FormField
               control={form.control}
-              name="creditorName"
+              name="customerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Creditor Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., John Doe" {...field} />
-                  </FormControl>
+                  <FormLabel>Customer</FormLabel>
+                  <div className="flex items-center gap-2">
+                  <Select onValueChange={field.onChange} defaultValue={field.value} value={selectedCustomerId}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a customer" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {customers.map(customer => (
+                        <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" size="icon" onClick={() => setIsAddingCustomer(true)}>
+                      <PlusCircle className="h-4 w-4"/>
+                  </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -106,7 +154,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
                 <FormItem>
                   <FormLabel>Due Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" {...field} value={field.value.toString().split('T')[0]}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,5 +185,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
         </Form>
       </DialogContent>
     </Dialog>
+    <AddCustomerDialog open={isAddingCustomer} onOpenChange={setIsAddingCustomer} onAddCustomer={handleAddNewCustomer} />
+    </>
   );
 }
