@@ -57,8 +57,8 @@ export default function DebtsPage() {
   const [debts, setDebts] = useState<Debt[]>(initialDebts);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const addDebt = (newDebt: Omit<Debt, 'id' | 'status' | 'dueDate'> & { dueDate: Date }) => {
-    setDebts(prev => [{ ...newDebt, id: Date.now().toString(), status: 'Unpaid', dueDate: newDebt.dueDate.toISOString() }, ...prev]);
+  const addDebt = (newDebt: Omit<Debt, 'id' | 'status'>) => {
+    setDebts(prev => [{ ...newDebt, id: Date.now().toString(), status: 'Unpaid' }, ...prev]);
   };
 
   const markAsPaid = (id: string) => {

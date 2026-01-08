@@ -42,7 +42,7 @@ type FormValues = z.infer<typeof formSchema>;
 type AddDebtDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddDebt: (debt: FormValues) => void;
+  onAddDebt: (debt: Omit<FormValues, 'dueDate'> & { dueDate: string }) => void;
 };
 
 export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogProps) {
@@ -57,7 +57,10 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
   });
 
   function onSubmit(values: FormValues) {
-    onAddDebt(values);
+    onAddDebt({
+      ...values,
+      dueDate: values.dueDate.toISOString(),
+    });
     toast({
       title: "Debt Added!",
       description: `${values.creditorName} has been added to your list.`,
@@ -149,7 +152,7 @@ export function AddDebtDialog({ open, onOpenChange, onAddDebt }: AddDebtDialogPr
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>Notes (list of items)</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="e.g., List of items taken..."
