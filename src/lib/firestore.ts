@@ -99,7 +99,7 @@ export const addItem = (db: Firestore, userId: string, type: ItemType, name: str
     const permissionError = new FirestorePermissionError({
       path: itemsCollection.path,
       operation: 'create',
-      requestResourceData: data,
+      requestResourceData: { name, checked: false, userId },
     });
     errorEmitter.emit('permission-error', permissionError);
   });
