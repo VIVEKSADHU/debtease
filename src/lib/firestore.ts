@@ -94,7 +94,7 @@ export const getItemsCollection = (db: Firestore, userId: string, type: ItemType
 
 export const addItem = (db: Firestore, userId: string, type: ItemType, name: string) => {
   const itemsCollection = getItemsCollection(db, userId, type);
-  const data = { name, checked: false, userId, createdAt: serverTimestamp() };
+  const data = { name, checked: false, userId, createdAt: new Date().toISOString() };
   addDoc(itemsCollection, data).catch(async (serverError) => {
     const permissionError = new FirestorePermissionError({
       path: itemsCollection.path,

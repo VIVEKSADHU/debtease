@@ -21,7 +21,7 @@ export type MarketItem = {
   name: string;
   checked: boolean;
   userId: string;
-  createdAt: any;
+  createdAt: string; // ISO string format
 };
 
 export type RestockItem = {
@@ -29,5 +29,5 @@ export type RestockItem = {
   name: string;
   checked: boolean;
   userId: string;
-  createdAt: any;
+  createdAt: string; // ISO string format
 };
